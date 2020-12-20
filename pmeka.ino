@@ -63,4 +63,20 @@ void loop() {
 //  X_AXIS.stepSync(Y_AXIS, 32000, 3200);
 //  X_AXIS.step(3200);
 //  delay(1000);
+  Serial.print(digitalRead(X_LS_MIN));
+  Serial.print('\t');
+  Serial.print(digitalRead(X_LS_MAX));
+  Serial.print('\t');
+  Serial.print(digitalRead(E0_LS_MIN));
+  Serial.print('\t');
+  Serial.print(digitalRead(E0_LS_MAX));
+  Serial.print('\t');
+  Serial.print(digitalRead(Y_LS_MIN));
+  Serial.print('\t');
+  Serial.print(digitalRead(Y_LS_MAX));
+  Serial.print('\t');
+  Serial.print(digitalRead(Z_LS_MIN));
+  Serial.print('\t');
+  Serial.print(digitalRead(Z_LS_MAX));
+  Serial.print('\t');
 }
