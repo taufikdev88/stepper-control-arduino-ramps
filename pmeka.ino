@@ -78,5 +78,5 @@ void loop() {
   Serial.print(digitalRead(Z_LS_MIN));
   Serial.print('\t');
   Serial.print(digitalRead(Z_LS_MAX));
-  Serial.print('\t');
+  Serial.print('\n');
 }
