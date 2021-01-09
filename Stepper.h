@@ -16,10 +16,10 @@ class Stepper {
   
   bool defaultDir = 0;
 
-  int step2Cm = 3200;
+  int step2Cm = 200;
   long pos = 0;
   
-  unsigned long delaySpeed = 50;
+  unsigned long delaySpeed = 500;
 
   Stepper *secondStepper;
 
@@ -29,9 +29,11 @@ class Stepper {
   void disable(); // mematikan stepper
   void enable(); // menyalakan stepper
   void setDelaySpeed(uint16_t dSpeed); // mengatur kecepatan stepper
-  void step(int n); // bergerak
-  void cm(int n);
-  void setStep2Cm(int n);
+  
+  void step(long n); // bergerak sesuai step
+  void cm(int n); // bergerak sesuai cm
+  
+  void setStep2Cm(int n); // mengatur 1 cm ada berapa step
   void resetPosition();
   long getPosition();
   int getPositionInCm();
@@ -44,7 +46,8 @@ class Stepper {
   void stepOn();
   void stepOff();
 
-  void stepSync(Stepper& s, int n1, int n2);
+  void stepSync(Stepper &s, int n1, int n2);
+  void cmSync(Stepper &s, int  n1, int n2);
 };
 
 #endif

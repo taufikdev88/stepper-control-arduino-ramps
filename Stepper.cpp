@@ -31,7 +31,18 @@ void Stepper::setDelaySpeed(uint16_t dSpeed){
   this->delaySpeed = dSpeed;
 }
   
-void Stepper::step(int n){
+void Stepper::cm(int n){
+  Serial.println("haloo disini dapat perintah untuk jalan sejauh ");
+  Serial.println(n);
+  delay(2000);
+  this->step((long) n * this->step2Cm);
+}
+
+void Stepper::step(long n){
+  Serial.println("haloo disini dapat perintah untuk step sebanyak ");
+  Serial.println(n);
+  delay(2000);
+  
   this->pos += n;
   
   if(n < 0){
@@ -54,10 +65,6 @@ void Stepper::step(int n){
     digitalWrite(this->stepPin, 0);
     delayMicroseconds(this->delaySpeed);
   }
-}
-
-void Stepper::cm(int n){
-  this->step(n * this->step2Cm);
 }
 
 void Stepper::setStep2Cm(int n){
@@ -104,6 +111,9 @@ void Stepper::stepOff(){
 }
 
 void Stepper::stepSync(Stepper& s, int n1, int n2){
+  this->pos += n1;
+  s.pos += n2;
+  
   this->setDir(n1 < 0 ? this->defaultDir : !this->defaultDir);
   if(this->secondStepper != NULL) this->secondStepper->setDir(n1 < 0 ? this->secondStepper->defaultDir : !this->secondStepper->defaultDir);
   
@@ -147,4 +157,8 @@ void Stepper::stepSync(Stepper& s, int n1, int n2){
       if(stateB == 1) n2--;
     }
   }
+}
+
+void Stepper::cmSync(Stepper &s, int  n1, int n2){
+  this->stepSync(s, n1 * this->step2Cm, n2 * s.step2Cm);
 }
