@@ -132,6 +132,7 @@ void Stepper::stepSync(Stepper& s, long n1, long n2){
   } else {
     this->setDir(!this->defaultDir);
     if(this->secondStepper != NULL) this->secondStepper->setDir(!this->secondStepper->defaultDir);
+    n1 = min((long) this->maxCm*this->step2Cm - this->pos, n1);
   }
   if(n2 < 0){
     sNeg = true;
@@ -141,6 +142,7 @@ void Stepper::stepSync(Stepper& s, long n1, long n2){
   } else {
     s.setDir(!s.defaultDir);
     if(s.secondStepper != NULL) s.secondStepper->setDir(!s.secondStepper->defaultDir);
+    n2 = min((long) s.maxCm*s.step2Cm - s.pos, n2);
   }
 
   long s1 = 0, s2 = 0;
