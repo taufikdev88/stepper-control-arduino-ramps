@@ -203,5 +203,5 @@ void Stepper::stepSync(Stepper& s, long n1, long n2){
 }
 
 void Stepper::cmSync(Stepper &s, int  n1, int n2){
-  this->stepSync(s, n1 * this->step2Cm, n2 * s.step2Cm);
+  this->stepSync(s, (long) n1 * this->step2Cm, (long) n2 * s.step2Cm);
 }
