@@ -120,10 +120,9 @@ void Stepper::stepOff(){
   digitalWrite(this->stepPin, 0);
 }
 
-void Stepper::stepSync(Stepper& s, int n1, int n2){
-  bool pNeg = false, sNeg = false;
-//  this->pos += n1;
-//  s.pos += n2;
+void Stepper::stepSync(Stepper& s, long n1, long n2){
+  bool pNeg = false;
+  bool sNeg = false;
 
   if(n1 < 0){
     pNeg = true;
