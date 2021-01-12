@@ -49,7 +49,7 @@ class Stepper {
   void stepOn();
   void stepOff();
 
-  void stepSync(Stepper &s, int n1, int n2);
+  void stepSync(Stepper &s, long n1, long n2);
   void cmSync(Stepper &s, int  n1, int n2);
 };
 
