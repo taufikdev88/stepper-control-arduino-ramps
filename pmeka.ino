@@ -1,3 +1,4 @@
+#include <ArduinoJson.h>
 #include "Stepper.h"
 
 /*
@@ -51,7 +52,14 @@ void setup() {
 
   X_AXIS.join(X_AXIS_2);
   Y_AXIS.join(Z_AXIS);
-  delay(2000);
+  
+  X_AXIS.home();
+  X_AXIS.setMaxDist(115);
+  
+  pinMode(9, OUTPUT);
+  pinMode(10, OUTPUT);
+  digitalWrite(9, HIGH);
+  digitalWrite(10, HIGH);
 }
 
 enum DataAktif {
@@ -69,6 +77,9 @@ void loop() {
     char dataIn = Serial.read();
 
     switch(dataIn){
+      case 'H':
+        X_AXIS.home();
+      break;
       case 'X':
         dataAktif = AktifX;
       break;
@@ -81,7 +92,8 @@ void loop() {
       default:
         if(isDigit(dataIn)){
           kordinat += dataIn;
-        } else if(dataIn == ' ' || dataIn == '\n') {
+//        } else if(dataIn == ' ' || dataIn == '\n') {
+        } else {
           switch(dataAktif){
             case AktifX:
             xToGo = kordinat.toInt();
@@ -107,11 +119,9 @@ void loop() {
       break;
     }
   }
-  Serial.println((String) xToGo + '\t' + yToGo + '\t' + zToGo);
-  Serial.println((String) X_AXIS.getPosition() + '\t' + X_AXIS.getPositionInCm());
-  delay(100);
 
   if(isJogActive){
+    Serial.println((String) "XTOGO: " + xToGo + ", YTOGO: " + yToGo + ", ZTOGO: " + zToGo);
     if(xToGo != 0 && yToGo != 0){
       X_AXIS.cmSync(Y_AXIS, xToGo, yToGo);
     } else if(xToGo != 0 && yToGo == 0){
@@ -124,27 +134,19 @@ void loop() {
     }
     isJogActive = false;
   }
-  
-//  Y_AXIS.step(32000);
-//  X_AXIS.stepSync(Y_AXIS, 3200, 32000);
-//  delay(1000);
-//  X_AXIS.stepSync(Y_AXIS, 32000, 3200);
-//  X_AXIS.step(3200);
-//  delay(1000);
-//  Serial.print(digitalRead(X_LS_MIN));
-//  Serial.print('\t');
-//  Serial.print(digitalRead(X_LS_MAX));
-//  Serial.print('\t');
-//  Serial.print(digitalRead(E0_LS_MIN));
-//  Serial.print('\t');
-//  Serial.print(digitalRead(E0_LS_MAX));
-//  Serial.print('\t');
-//  Serial.print(digitalRead(Y_LS_MIN));
-//  Serial.print('\t');
-//  Serial.print(digitalRead(Y_LS_MAX));
-//  Serial.print('\t');
-//  Serial.print(digitalRead(Z_LS_MIN));
-//  Serial.print('\t');
-//  Serial.print(digitalRead(Z_LS_MAX));
-//  Serial.print('\n');
+
+  static unsigned long timing = millis();
+  if((unsigned long) millis()-timing > 1000){
+    timing = millis();
+    
+    StaticJsonDocument<256> doc;
+    doc["X_POSITION"] = X_AXIS.getPosition();
+    doc["X_POSITION_CM"] = X_AXIS.getPositionInCm();
+    doc["Y_POSITION"] = Y_AXIS.getPosition();
+    doc["Y_POSITION_CM"] = Y_AXIS.getPositionInCm();
+    doc["Z_POSITION"] = Z_AXIS.getPosition();
+    doc["Z_POSITION_CM"] = Z_AXIS.getPositionInCm();
+    serializeJson(doc, Serial);
+    Serial.println();
+  }
 }

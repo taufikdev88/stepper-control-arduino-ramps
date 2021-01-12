@@ -7,7 +7,7 @@
 #include <stdio.h>
 
 class Stepper {
-  private:
+  public:
   uint8_t stepPin = 0;
   uint8_t dirPin = 0;
   uint8_t enPin = 0;
@@ -16,10 +16,11 @@ class Stepper {
   
   bool defaultDir = 0;
 
-  int step2Cm = 200;
+  int maxCm = 115;
+  int step2Cm = 800;
   long pos = 0;
   
-  unsigned long delaySpeed = 500;
+  unsigned long delaySpeed = 50;
 
   Stepper *secondStepper;
 
@@ -29,6 +30,8 @@ class Stepper {
   void disable(); // mematikan stepper
   void enable(); // menyalakan stepper
   void setDelaySpeed(uint16_t dSpeed); // mengatur kecepatan stepper
+  void setMaxDist(int cm); // mengganti titik maksimal cm
+  int getMaxDist();
   
   void step(long n); // bergerak sesuai step
   void cm(int n); // bergerak sesuai cm

@@ -30,33 +30,38 @@ void Stepper::enable(){
 void Stepper::setDelaySpeed(uint16_t dSpeed){
   this->delaySpeed = dSpeed;
 }
-  
+
+void Stepper::setMaxDist(int cm){
+  this->maxCm = cm;
+}
+
+int Stepper::getMaxDist(){
+  return this->maxCm;
+}
+
 void Stepper::cm(int n){
-  Serial.println("haloo disini dapat perintah untuk jalan sejauh ");
-  Serial.println(n);
-  delay(2000);
+  n = min(n, this->maxCm);
   this->step((long) n * this->step2Cm);
 }
 
 void Stepper::step(long n){
-  Serial.println("haloo disini dapat perintah untuk step sebanyak ");
-  Serial.println(n);
-  delay(2000);
-  
-  this->pos += n;
-  
+  bool neg = false;
   if(n < 0){
+    neg = true;
     n *= -1;
     if(this->secondStepper != NULL) this->secondStepper->setDir(defaultDir);
     this->setDir(defaultDir);
-    if(digitalRead(this->lsMin) == 0) return;
   } else {
     if(this->secondStepper != NULL) this->secondStepper->setDir(!defaultDir);
     this->setDir(!defaultDir);
-    if(digitalRead(this->lsMax) == 0) return;
+    n = min((long) this->maxCm*this->step2Cm - this->pos, n);
   }
   
+  long s = 0;
   for(n; n>0; n--){
+    if(!digitalRead(this->lsMin) && neg || !digitalRead(this->lsMax) && !neg) break;
+
+    s++;
     if(secondStepper != NULL) secondStepper->stepOn();
     digitalWrite(this->stepPin, 1);
     delayMicroseconds(this->delaySpeed);
@@ -65,6 +70,11 @@ void Stepper::step(long n){
     digitalWrite(this->stepPin, 0);
     delayMicroseconds(this->delaySpeed);
   }
+  
+  if(neg) this->pos -= s;
+  else this->pos += s;
+
+  if(!digitalRead(this->lsMin)) this->pos = 0;
 }
 
 void Stepper::setStep2Cm(int n){
@@ -111,30 +121,47 @@ void Stepper::stepOff(){
 }
 
 void Stepper::stepSync(Stepper& s, int n1, int n2){
-  this->pos += n1;
-  s.pos += n2;
-  
-  this->setDir(n1 < 0 ? this->defaultDir : !this->defaultDir);
-  if(this->secondStepper != NULL) this->secondStepper->setDir(n1 < 0 ? this->secondStepper->defaultDir : !this->secondStepper->defaultDir);
-  
-  s.setDir(n2 < 0 ? s.defaultDir : !s.defaultDir);
-  if(s.secondStepper != NULL) s.secondStepper->setDir(n1 < 0 ? s.secondStepper->defaultDir : !s.secondStepper->defaultDir);
+  bool pNeg = false, sNeg = false;
+//  this->pos += n1;
+//  s.pos += n2;
+
+  if(n1 < 0){
+    pNeg = true;
+    this->setDir(this->defaultDir);
+    if(this->secondStepper != NULL) this->secondStepper->setDir(this->secondStepper->defaultDir);
+  } else {
+    this->setDir(!this->defaultDir);
+    if(this->secondStepper != NULL) this->secondStepper->setDir(!this->secondStepper->defaultDir);
+  }
+  if(n2 < 0){
+    sNeg = true;
+    s.setDir(s.defaultDir);
+    if(s.secondStepper != NULL) s.secondStepper->setDir(s.secondStepper->defaultDir);
+  } else {
+    s.setDir(!s.defaultDir);
+    if(s.secondStepper != NULL) s.secondStepper->setDir(!s.secondStepper->defaultDir);
+  }
 
   n1 = abs(n1);
   n2 = abs(n2);
+  long s1 = 0, s2 = 0;
   unsigned long delayMax = max(this->delaySpeed * 2 * n1, s.delaySpeed * 2 * n2);
   unsigned long delayA = (delayMax / n1) / 2;
   unsigned long delayB = (delayMax / n2) / 2;
 
-  Serial.println((String) delayMax + '\t' + delayA + '\t' + delayB + '\t' + (this->delaySpeed * 2 * n1) + '\t' + n2);
+//  Serial.println((String) delayMax + '\t' + delayA + '\t' + delayB + '\t' + (this->delaySpeed * 2 * n1) + '\t' + n2);
 
   bool stateA = 1, stateB = 1;
   unsigned long timingA = micros();
   unsigned long timingB = micros();
   while(n1 > 0 || n2 > 0){
+    bool canStep1 = true, canStep2 = true;
+    
     if((unsigned long) micros()-timingA > delayA && n1 > 0){
       timingA = micros();
-      if(stateA){
+      if(!digitalRead(this->lsMin) && pNeg || !digitalRead(this->lsMax) && !pNeg) canStep1 = false;
+      
+      if(stateA && canStep1){
         this->stepOn();
         if(this->secondStepper != NULL) this->secondStepper->stepOn();
       } else {
@@ -142,11 +169,16 @@ void Stepper::stepSync(Stepper& s, int n1, int n2){
         if(this->secondStepper != NULL) this->secondStepper->stepOff();
       }
       stateA = !stateA;
-      if(stateA == 1) n1--;
+      if(stateA == 1){
+        if(canStep1) s1++;
+        n1--;
+      }
     }
     if((unsigned long) micros()-timingB > delayB && n2 > 0){
       timingB = micros();
-      if(stateB){
+      if(!digitalRead(s.lsMin) && sNeg || !digitalRead(s.lsMax) && !sNeg) canStep2 = false;
+      
+      if(stateB && canStep2){
         s.stepOn();
         if(s.secondStepper != NULL) s.secondStepper->stepOn();
       } else {
@@ -154,9 +186,21 @@ void Stepper::stepSync(Stepper& s, int n1, int n2){
         if(s.secondStepper != NULL) s.secondStepper->stepOff();
       }
       stateB = !stateB;
-      if(stateB == 1) n2--;
+      if(stateB == 1){
+        if(canStep2) s2++;
+        n2--;
+      }
     }
   }
+  
+  if(pNeg) this->pos -= s1;
+  else this->pos += s1;
+  
+  if(sNeg) s.pos -= s2;
+  else s.pos += s2;
+  
+  if(!digitalRead(this->lsMin)) this->pos = 0;
+  if(!digitalRead(s.lsMin)) s.pos = 0;
 }
 
 void Stepper::cmSync(Stepper &s, int  n1, int n2){
