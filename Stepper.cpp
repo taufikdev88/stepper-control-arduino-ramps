@@ -127,6 +127,7 @@ void Stepper::stepSync(Stepper& s, int n1, int n2){
 
   if(n1 < 0){
     pNeg = true;
+    n1 *= -1;
     this->setDir(this->defaultDir);
     if(this->secondStepper != NULL) this->secondStepper->setDir(this->secondStepper->defaultDir);
   } else {
@@ -135,6 +136,7 @@ void Stepper::stepSync(Stepper& s, int n1, int n2){
   }
   if(n2 < 0){
     sNeg = true;
+    n2 *= -1;
     s.setDir(s.defaultDir);
     if(s.secondStepper != NULL) s.secondStepper->setDir(s.secondStepper->defaultDir);
   } else {
@@ -142,8 +144,6 @@ void Stepper::stepSync(Stepper& s, int n1, int n2){
     if(s.secondStepper != NULL) s.secondStepper->setDir(!s.secondStepper->defaultDir);
   }
 
-  n1 = abs(n1);
-  n2 = abs(n2);
   long s1 = 0, s2 = 0;
   unsigned long delayMax = max(this->delaySpeed * 2 * n1, s.delaySpeed * 2 * n2);
   unsigned long delayA = (delayMax / n1) / 2;
