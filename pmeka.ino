@@ -51,9 +51,12 @@ void setup() {
   Z_AXIS.begin();
 
   X_AXIS.join(X_AXIS_2);
-  Y_AXIS.join(Z_AXIS);
-  
+
+  Y_AXIS.home();
   X_AXIS.home();
+
+  Y_AXIS.setStep2Cm(4000);
+  Y_AXIS.setMaxDist(24);
   X_AXIS.setMaxDist(115);
   
   pinMode(9, OUTPUT);
@@ -78,7 +81,10 @@ void loop() {
 
     switch(dataIn){
       case 'H':
+        Z_AXIS.home();
+        Y_AXIS.home();
         X_AXIS.home();
+        dataAktif = None;
       break;
       case 'X':
         dataAktif = AktifX;
@@ -132,21 +138,27 @@ void loop() {
     if(zToGo != 0){
       Z_AXIS.cm(zToGo);
     }
+    xToGo = 0;
+    yToGo = 0;
+    zToGo = 0;
     isJogActive = false;
   }
+  
+  digitalWrite(9, !digitalRead(X_AXIS.lsMin));
+  digitalWrite(10, !digitalRead(Y_AXIS.lsMin));
 
-  static unsigned long timing = millis();
-  if((unsigned long) millis()-timing > 1000){
-    timing = millis();
-    
-    StaticJsonDocument<256> doc;
-    doc["X_POSITION"] = X_AXIS.getPosition();
-    doc["X_POSITION_CM"] = X_AXIS.getPositionInCm();
-    doc["Y_POSITION"] = Y_AXIS.getPosition();
-    doc["Y_POSITION_CM"] = Y_AXIS.getPositionInCm();
-    doc["Z_POSITION"] = Z_AXIS.getPosition();
-    doc["Z_POSITION_CM"] = Z_AXIS.getPositionInCm();
-    serializeJson(doc, Serial);
-    Serial.println();
-  }
+//  static unsigned long timing = millis();
+//  if((unsigned long) millis()-timing > 1000){
+//    timing = millis();
+//    
+//    StaticJsonDocument<256> doc;
+//    doc["X_POSITION"] = X_AXIS.getPosition();
+//    doc["X_POSITION_CM"] = X_AXIS.getPositionInCm();
+//    doc["Y_POSITION"] = Y_AXIS.getPosition();
+//    doc["Y_POSITION_CM"] = Y_AXIS.getPositionInCm();
+//    doc["Z_POSITION"] = Z_AXIS.getPosition();
+//    doc["Z_POSITION_CM"] = Z_AXIS.getPositionInCm();
+//    serializeJson(doc, Serial);
+//    Serial.println();
+//  }
 }
